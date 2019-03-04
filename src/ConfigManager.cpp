@@ -15,6 +15,23 @@ void ConfigManager::setAPName(const char *name) {
     this->apName = (char *)name;
 }
 
+bool ConfigManager::isAuthenticated() {
+  if (configUsername && configPassword && !server->authenticate(configUsername, configPassword)) {
+    server->requestAuthentication();
+    return false;
+  }
+  return true;
+}
+
+
+void ConfigManager::setConfigUsername(const char *configUsername) {
+  this->configUsername = (char *)configUsername;
+}
+
+void ConfigManager::setConfigPassword(const char *configPassword) {
+  this->configPassword = (char *)configPassword;
+}
+
 void ConfigManager::setAPPassword(const char *password) {
     this->apPassword = (char *)password;
 }
@@ -79,6 +96,9 @@ JsonObject &ConfigManager::decodeJson(String jsonString)
 }
 
 void ConfigManager::handleAPGet() {
+    if (!isAuthenticated()) {
+      return;
+    }
     SPIFFS.begin();
 
     File f = SPIFFS.open(apFilename, "r");
@@ -94,6 +114,9 @@ void ConfigManager::handleAPGet() {
 }
 
 void ConfigManager::handleAPPost() {
+    if (!isAuthenticated()) {
+      return;
+    }
     bool isJson = server->header("Content-Type") == FPSTR(mimeJSON);
     String ssid;
     String password;
@@ -130,6 +153,9 @@ void ConfigManager::handleAPPost() {
 }
 
 void ConfigManager::handleRESTGet() {
+    if (!isAuthenticated()) {
+        return;
+    }
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
 
@@ -149,6 +175,9 @@ void ConfigManager::handleRESTGet() {
 }
 
 void ConfigManager::handleRESTPut() {
+    if (!isAuthenticated()) {
+        return;
+    }
     JsonObject& obj = this->decodeJson(server->arg("plain"));
     if (!obj.success()) {
         server->send(400, FPSTR(mimeJSON), "");
@@ -245,13 +274,13 @@ void ConfigManager::startAP() {
 
     WiFi.mode(WIFI_AP);
     WiFi.softAP(apName, apPassword);
-	
+
     delay(500); // Need to wait to get IP
-	
+
     IPAddress ip(192, 168, 1, 1);
     IPAddress NMask(255, 255, 255, 0);
     WiFi.softAPConfig(ip, ip, NMask);
-	
+
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(myIP);

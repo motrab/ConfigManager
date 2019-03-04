@@ -125,10 +125,13 @@ public:
     void setAPPassword(const char *password);
     void setAPFilename(const char *filename);
     void setAPTimeout(const int timeout);
+    void setConfigUsername(const char *username);
+    void setConfigPassword(const char *password);
     void setWifiConnectRetries(const int retries);
     void setWifiConnectInterval(const int interval);
     void setAPCallback(std::function<void(WebServer*)> callback);
     void setAPICallback(std::function<void(WebServer*)> callback);
+    bool isAuthenticated();
     void loop();
 
     template<typename T>
@@ -164,6 +167,8 @@ private:
 
     char *apName = (char *)"Thing";
     char *apPassword = NULL;
+    char *configUsername = NULL;
+    char *configPassword = NULL;
     char *apFilename = (char *)"/index.html";
     int apTimeout = 0;
     unsigned long apStart = 0;
