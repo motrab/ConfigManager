@@ -316,6 +316,7 @@ void ConfigManager::startApi() {
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->on("/settings", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));
     server->on("/settings", HTTPMethod::HTTP_PUT, std::bind(&ConfigManager::handleRESTPut, this));
+    server->on("/reset", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleReset, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 
     if (apiCallback) {
@@ -323,6 +324,20 @@ void ConfigManager::startApi() {
     }
 
     server->begin();
+}
+
+void ConfigManager::handleReset() {
+    if (!isAuthenticated()) {
+        return;
+    }
+
+    for (int i = WIFI_OFFSET; i < CONFIG_OFFSET + configSize; i++) {
+      EEPROM.write(i  + WIFI_OFFSET, '\0');
+    }
+    EEPROM.commit();
+    server->send(204, FPSTR(mimePlain), F("Config reset. Rebooting."));
+
+    ESP.restart();
 }
 
 void ConfigManager::readConfig() {

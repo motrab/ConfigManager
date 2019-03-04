@@ -189,6 +189,7 @@ private:
     void handleAPPost();
     void handleRESTGet();
     void handleRESTPut();
+    void handleReset();
     void handleNotFound();
 
     bool wifiConnected();
